@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-const Version = "0.1.2"
+const Version = "0.2.0"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -31,7 +31,7 @@ func main() {
 	configDir := filepath.Dir(configFile)
 	outputFile := filepath.Join(configDir, "config.so")
 	
-	// Create a temporary main.go that imports the config
+	// Create a temporary build directory with proper module setup
 	tempDir, err := os.MkdirTemp("", "edito-config-*")
 	if err != nil {
 		fmt.Printf("Failed to create temp directory: %v\n", err)
@@ -39,18 +39,32 @@ func main() {
 	}
 	defer os.RemoveAll(tempDir)
 	
+	// Initialize go module in temp directory
+	if err := initGoModule(tempDir); err != nil {
+		fmt.Printf("Failed to initialize Go module: %v\n", err)
+		os.Exit(1)
+	}
+	
+	// Read config file content
+	configContent, err := os.ReadFile(configFile)
+	if err != nil {
+		fmt.Printf("Failed to read config file: %v\n", err)
+		os.Exit(1)
+	}
+	
+	// Process config content to change package declaration
+	processedConfig := processConfigContent(string(configContent))
+	
+	// Create main.go that includes the config content
 	mainGoContent := fmt.Sprintf(`package main
 
-import (
-	_ "%s"
-	"github.com/TakahashiShuuhei/edito/pkg/edito"
-)
+%s
 
 // Export for plugin loading
 var ConfigInit = func() {
 	// Configuration is loaded via init() functions
 }
-`, getModulePath(configFile))
+`, processedConfig)
 	
 	mainGoFile := filepath.Join(tempDir, "main.go")
 	if err := os.WriteFile(mainGoFile, []byte(mainGoContent), 0644); err != nil {
@@ -58,8 +72,15 @@ var ConfigInit = func() {
 		os.Exit(1)
 	}
 	
+	// Run go mod tidy to resolve dependencies
+	if err := runGoModTidy(tempDir); err != nil {
+		fmt.Printf("Failed to run go mod tidy: %v\n", err)
+		os.Exit(1)
+	}
+	
 	// Build as plugin
-	cmd := exec.Command("go", "build", "-buildmode=plugin", "-o", outputFile, mainGoFile)
+	cmd := exec.Command("go", "build", "-buildmode=plugin", "-o", outputFile, ".")
+	cmd.Dir = tempDir
 	cmd.Env = append(os.Environ(), "CGO_ENABLED=1")
 	
 	output, err := cmd.CombinedOutput()
@@ -69,6 +90,42 @@ var ConfigInit = func() {
 	}
 	
 	fmt.Printf("Configuration compiled to: %s\n", outputFile)
+}
+
+func initGoModule(tempDir string) error {
+	// Initialize go module
+	cmd := exec.Command("go", "mod", "init", "temp-config")
+	cmd.Dir = tempDir
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func runGoModTidy(tempDir string) error {
+	// Run go mod tidy to resolve dependencies
+	cmd := exec.Command("go", "mod", "tidy")
+	cmd.Dir = tempDir
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func processConfigContent(content string) string {
+	lines := strings.Split(content, "\n")
+	result := make([]string, 0, len(lines))
+	
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		// Skip package declaration since we'll use package main
+		if strings.HasPrefix(trimmed, "package ") {
+			continue
+		}
+		result = append(result, line)
+	}
+	
+	return strings.Join(result, "\n")
 }
 
 func getModulePath(configFile string) string {
