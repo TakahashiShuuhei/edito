@@ -5,7 +5,7 @@ import "fmt"
 // Version information for edito
 // These values can be overridden at build time using -ldflags
 var (
-	Version   = "0.1.2"
+	Version   = "0.2.0"
 	BuildDate = "unknown"
 	GitCommit = "unknown"
 )
