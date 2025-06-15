@@ -15,13 +15,32 @@ Emacsライクなキーバインディング、バッファシステム、プラ
 
 ## インストール
 
+### 方法1: go install（推奨）
+
 ```bash
+# メインのエディタをインストール
+go install github.com/TakahashiShuuhei/edito@latest
+
+# 設定ファイルコンパイラもインストール
+go install github.com/TakahashiShuuhei/edito/cmd/edito-config@latest
+```
+
+### 方法2: ソースからビルド
+
+```bash
+git clone https://github.com/TakahashiShuuhei/edito.git
+cd edito
 go build -o edito
+go build -o edito-config ./cmd/edito-config/
 ```
 
 ## 使用方法
 
 ```bash
+# go installでインストールした場合
+edito <filename>
+
+# ローカルビルドの場合
 ./edito <filename>
 ```
 
@@ -137,7 +156,12 @@ func init() {
 設定ファイルをコンパイルして使用します：
 
 ```bash
+# go installでedito-configをインストールした場合
 edito-config ~/.config/edito/config.go
+
+# または、設定ディレクトリで直接コンパイル
+cd ~/.config/edito
+edito-config config.go
 ```
 
 ## ディレクトリ構造
