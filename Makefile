@@ -62,7 +62,7 @@ dev-install: all dev-setup install-example-config install-example-plugin
 
 # Show version
 version:
-	@echo "edito version 0.1.0"
+	@echo "edito version 0.1.1"
 
 # Help
 help:
