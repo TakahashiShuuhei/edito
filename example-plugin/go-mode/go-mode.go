@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"strings"
 	
-	"edito/internal/api"
+	"github.com/TakahashiShuuhei/edito/internal/api"
 )
 
 type GoModePlugin struct {

@@ -6,7 +6,7 @@ import (
 	"strings"
 	
 	"github.com/nsf/termbox-go"
-	"edito/internal/minibuffer"
+	"github.com/TakahashiShuuhei/edito/internal/minibuffer"
 )
 
 func (e *Editor) setupCommands() {

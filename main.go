@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"edito/internal/editor"
+	"github.com/TakahashiShuuhei/edito/internal/editor"
 )
 
 func main() {

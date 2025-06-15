@@ -1,4 +1,4 @@
-module edito
+module github.com/TakahashiShuuhei/edito
 
 go 1.22.2
 

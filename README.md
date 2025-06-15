@@ -102,7 +102,7 @@ package config
 
 import (
     "strings"
-    "edito/pkg/edito"
+    "github.com/TakahashiShuuhei/edito/pkg/edito"
 )
 
 func init() {

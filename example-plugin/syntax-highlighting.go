@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 	
-	"edito/internal/plugin"
+	"github.com/TakahashiShuuhei/edito/internal/plugin"
 )
 
 type SyntaxHighlightingPlugin struct {

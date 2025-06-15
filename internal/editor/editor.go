@@ -6,14 +6,14 @@ import (
 	"path/filepath"
 
 	"github.com/nsf/termbox-go"
-	"edito/internal/api"
-	"edito/internal/buffer"
-	"edito/internal/command"
-	"edito/internal/config"
-	"edito/internal/keybinding"
-	"edito/internal/minibuffer"
-	"edito/internal/package_manager"
-	"edito/internal/plugin"
+	"github.com/TakahashiShuuhei/edito/internal/api"
+	"github.com/TakahashiShuuhei/edito/internal/buffer"
+	"github.com/TakahashiShuuhei/edito/internal/command"
+	"github.com/TakahashiShuuhei/edito/internal/config"
+	"github.com/TakahashiShuuhei/edito/internal/keybinding"
+	"github.com/TakahashiShuuhei/edito/internal/minibuffer"
+	"github.com/TakahashiShuuhei/edito/internal/package_manager"
+	"github.com/TakahashiShuuhei/edito/internal/plugin"
 )
 
 type Editor struct {

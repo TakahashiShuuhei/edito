@@ -39,7 +39,7 @@ Editoでは、プラグインとユーザー設定ファイルの両方をGoで�
 ```go
 package config
 
-import "edito/pkg/edito"
+import "github.com/TakahashiShuuhei/edito/pkg/edito"
 
 func init() {
     // 基本設定
@@ -89,8 +89,8 @@ Editoは起動時に以下の順序で設定を読み込みます：
 package main
 
 import (
-    "edito/internal/api"
-    "edito/pkg/edito"
+    "github.com/TakahashiShuuhei/edito/internal/api"
+    "github.com/TakahashiShuuhei/edito/pkg/edito"
 )
 
 type GoModePlugin struct {
@@ -226,4 +226,4 @@ A: `config.so` が存在し、正しくコンパイルされているか確認�
 A: プラグインファイルが正しいディレクトリにあり、`var Plugin` が正しくエクスポートされているか確認してください。
 
 **Q: APIが呼び出せない**
-A: `edito/pkg/edito` パッケージを正しくインポートしているか確認してください。
+A: `github.com/TakahashiShuuhei/edito/pkg/edito` パッケージを正しくインポートしているか確認してください。
