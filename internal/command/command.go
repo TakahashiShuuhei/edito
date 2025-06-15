@@ -7,11 +7,14 @@ import (
 )
 
 type Handler func(args []string) error
+type InteractiveHandler func(promptFunc func(prompt string) (string, error)) error
 
 type Command struct {
 	Name        string
 	Description string
 	Handler     Handler
+	Interactive InteractiveHandler
+	NeedsArgs   bool
 }
 
 type Registry struct {
@@ -32,13 +35,39 @@ func (r *Registry) Register(name, description string, handler Handler) {
 	}
 }
 
+func (r *Registry) RegisterInteractive(name, description string, interactive InteractiveHandler) {
+	r.commands[name] = &Command{
+		Name:        name,
+		Description: description,
+		Interactive: interactive,
+		NeedsArgs:   true,
+	}
+}
+
 func (r *Registry) Execute(name string, args []string) error {
 	cmd, exists := r.commands[name]
 	if !exists {
 		return fmt.Errorf("command not found: %s", name)
 	}
 	
-	return cmd.Handler(args)
+	if cmd.Handler != nil {
+		return cmd.Handler(args)
+	}
+	
+	return fmt.Errorf("command %s needs interactive execution", name)
+}
+
+func (r *Registry) ExecuteInteractive(name string, promptFunc func(prompt string) (string, error)) error {
+	cmd, exists := r.commands[name]
+	if !exists {
+		return fmt.Errorf("command not found: %s", name)
+	}
+	
+	if cmd.Interactive != nil {
+		return cmd.Interactive(promptFunc)
+	}
+	
+	return fmt.Errorf("command %s is not interactive", name)
 }
 
 func (r *Registry) GetCommand(name string) *Command {

@@ -3,7 +3,9 @@ package editor
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/nsf/termbox-go"
 	"github.com/TakahashiShuuhei/edito/internal/api"
@@ -145,6 +147,13 @@ func (e *Editor) showMessage(message string) {
 }
 
 func (e *Editor) loadGoConfig() error {
+	// Check if config needs to be rebuilt
+	if e.shouldRebuildConfig() {
+		if err := e.rebuildConfig(); err != nil {
+			fmt.Printf("Warning: failed to rebuild config: %v\n", err)
+		}
+	}
+	
 	// Try to load and parse Go source first
 	api := config.EditorAPI{
 		BindKey: e.bindKeyFromConfig,
@@ -164,6 +173,111 @@ func (e *Editor) loadGoConfig() error {
 	}
 	
 	return nil
+}
+
+func (e *Editor) shouldRebuildConfig() bool {
+	configFile := e.config.GoConfigFile()
+	compiledFile := e.config.CompiledConfigFile()
+	
+	// Check if config.go exists
+	configStat, err := os.Stat(configFile)
+	if err != nil {
+		return false // No config.go file
+	}
+	
+	// Check if config.so exists
+	compiledStat, err := os.Stat(compiledFile)
+	if err != nil {
+		return true // config.so doesn't exist, need to build
+	}
+	
+	// Check if config.go is newer than config.so
+	return configStat.ModTime().After(compiledStat.ModTime())
+}
+
+func (e *Editor) rebuildConfig() error {
+	fmt.Printf("Config file updated, rebuilding...\n")
+	
+	// Use internal edito-config functionality
+	return e.compileConfig(e.config.GoConfigFile(), e.config.CompiledConfigFile())
+}
+
+func (e *Editor) compileConfig(configFile, outputFile string) error {
+	// This duplicates some logic from edito-config but allows us to rebuild
+	// without requiring the external binary
+	
+	tempDir, err := os.MkdirTemp("", "edito-config-*")
+	if err != nil {
+		return fmt.Errorf("failed to create temp directory: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+	
+	// Initialize go module in temp directory
+	cmd := exec.Command("go", "mod", "init", "temp-config")
+	cmd.Dir = tempDir
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to init go module: %v", err)
+	}
+	
+	// Read config file content
+	configContent, err := os.ReadFile(configFile)
+	if err != nil {
+		return fmt.Errorf("failed to read config file: %v", err)
+	}
+	
+	// Process config content to change package declaration
+	processedConfig := e.processConfigContent(string(configContent))
+	
+	// Create main.go that includes the config content
+	mainGoContent := fmt.Sprintf(`package main
+
+%s
+
+// Export for plugin loading
+var ConfigInit = func() {
+	// Configuration is loaded via init() functions
+}
+`, processedConfig)
+	
+	mainGoFile := filepath.Join(tempDir, "main.go")
+	if err := os.WriteFile(mainGoFile, []byte(mainGoContent), 0644); err != nil {
+		return fmt.Errorf("failed to write main.go: %v", err)
+	}
+	
+	// Run go mod tidy to resolve dependencies
+	cmd = exec.Command("go", "mod", "tidy")
+	cmd.Dir = tempDir
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to run go mod tidy: %v", err)
+	}
+	
+	// Build as plugin
+	cmd = exec.Command("go", "build", "-buildmode=plugin", "-o", outputFile, ".")
+	cmd.Dir = tempDir
+	cmd.Env = append(os.Environ(), "CGO_ENABLED=1")
+	
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("build failed: %v\nOutput: %s", err, string(output))
+	}
+	
+	return nil
+}
+
+func (e *Editor) processConfigContent(content string) string {
+	lines := strings.Split(content, "\n")
+	result := make([]string, 0, len(lines))
+	
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		// Skip package declaration since we'll use package main
+		if strings.HasPrefix(trimmed, "package ") {
+			continue
+		}
+		result = append(result, line)
+	}
+	
+	return strings.Join(result, "\n")
 }
 
 func (e *Editor) bindKeyFromConfig(key, command string) {

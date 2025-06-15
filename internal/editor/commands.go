@@ -41,13 +41,14 @@ func (e *Editor) setupCommands() {
 		return e.showBufferList()
 	})
 	
-	e.commandRegistry.Register("goto-line", "Go to line number", func(args []string) error {
-		if len(args) == 0 {
-			return fmt.Errorf("line number required")
-		}
-		lineNum, err := strconv.Atoi(args[0])
+	e.commandRegistry.RegisterInteractive("goto-line", "Go to line number", func(promptFunc func(prompt string) (string, error)) error {
+		input, err := promptFunc("Go to line: ")
 		if err != nil {
-			return fmt.Errorf("invalid line number: %s", args[0])
+			return err
+		}
+		lineNum, err := strconv.Atoi(strings.TrimSpace(input))
+		if err != nil {
+			return fmt.Errorf("invalid line number: %s", input)
 		}
 		return e.gotoLine(lineNum)
 	})
@@ -79,8 +80,23 @@ func (e *Editor) activateCommandMode() {
 		commandName := parts[0]
 		args := parts[1:]
 		
+		// Check if it's an interactive command
+		cmd := e.commandRegistry.GetCommand(commandName)
+		if cmd != nil && cmd.Interactive != nil {
+			return e.commandRegistry.ExecuteInteractive(commandName, e.promptUser)
+		}
+		
 		return e.commandRegistry.Execute(commandName, args)
 	})
+}
+
+func (e *Editor) promptUser(prompt string) (string, error) {
+	// Simplified implementation - in practice this would need proper async handling
+	// For now, we'll integrate this with the main event loop differently
+	
+	// This is a placeholder - real implementation would use a proper input mode
+	// and integrate with the editor's event handling system
+	return "", fmt.Errorf("interactive input not yet fully implemented")
 }
 
 func (e *Editor) handleCtrlX() {

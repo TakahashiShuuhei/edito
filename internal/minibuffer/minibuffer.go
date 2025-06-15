@@ -12,6 +12,7 @@ const (
 	ModeNormal Mode = iota
 	ModeCommand
 	ModeSearch
+	ModeInput
 )
 
 type Completion struct {
