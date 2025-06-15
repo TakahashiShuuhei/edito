@@ -17,6 +17,7 @@ type EditorAPI struct {
 	getCurrentBuffer func() Buffer
 	showMessage   func(message string)
 	executeCommand func(command string, args []string) error
+	installPlugin func(name, repository, version string)
 }
 
 // Buffer represents a text buffer
@@ -84,6 +85,13 @@ func (e *EditorAPI) ExecuteCommand(command string, args []string) error {
 		return e.executeCommand(command, args)
 	}
 	return nil
+}
+
+// InstallPlugin installs a plugin from a git repository
+func (e *EditorAPI) InstallPlugin(name, repository, version string) {
+	if e.installPlugin != nil {
+		e.installPlugin(name, repository, version)
+	}
 }
 
 // KeyBinding represents a key binding

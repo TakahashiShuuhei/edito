@@ -20,6 +20,7 @@ type EditorAPI struct {
 	LoadPlugin    func(name string)
 	SetOption     func(key string, value any)
 	RegisterHook  func(event string, handler func())
+	InstallPlugin func(name, repository, version string)
 }
 
 func LoadGoConfig(filepath string, api EditorAPI) error {
@@ -100,6 +101,8 @@ func (gc *GoConfig) executeCallExpr(call *ast.CallExpr) error {
 			return gc.executeLoadPlugin(call.Args)
 		case "SetOption":
 			return gc.executeSetOption(call.Args)
+		case "InstallPlugin":
+			return gc.executeInstallPlugin(call.Args)
 		}
 	}
 	return nil
@@ -115,6 +118,8 @@ func (gc *GoConfig) executeEditorCall(method string, args []ast.Expr) error {
 		return gc.executeSetOption(args)
 	case "RegisterHook":
 		return gc.executeRegisterHook(args)
+	case "InstallPlugin":
+		return gc.executeInstallPlugin(args)
 	}
 	return nil
 }
@@ -183,6 +188,32 @@ func (gc *GoConfig) executeRegisterHook(args []ast.Expr) error {
 	
 	gc.editor.RegisterHook(event, func() {
 	})
+	return nil
+}
+
+func (gc *GoConfig) executeInstallPlugin(args []ast.Expr) error {
+	if len(args) < 3 {
+		return fmt.Errorf("InstallPlugin requires 3 arguments")
+	}
+	
+	name, err := gc.evalStringLiteral(args[0])
+	if err != nil {
+		return err
+	}
+	
+	repository, err := gc.evalStringLiteral(args[1])
+	if err != nil {
+		return err
+	}
+	
+	version, err := gc.evalStringLiteral(args[2])
+	if err != nil {
+		return err
+	}
+	
+	if gc.editor.InstallPlugin != nil {
+		gc.editor.InstallPlugin(name, repository, version)
+	}
 	return nil
 }
 

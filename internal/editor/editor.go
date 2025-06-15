@@ -30,6 +30,8 @@ type Editor struct {
 	configSettings map[string]any
 	configPlugins  []string
 	configKeyBindings map[string]string
+	autoInstaller  *plugin.AutoInstaller
+	configPluginSpecs []plugin.PluginSpec
 }
 
 func New() *Editor {
@@ -37,6 +39,7 @@ func New() *Editor {
 		configSettings: make(map[string]any),
 		configPlugins: make([]string, 0),
 		configKeyBindings: make(map[string]string),
+		configPluginSpecs: make([]plugin.PluginSpec, 0),
 	}
 	
 	var err error
@@ -59,7 +62,9 @@ func New() *Editor {
 	e.setupCommands()
 	e.setupKeyBindings()
 	e.setupPluginSystem()
+	e.setupAutoInstaller()
 	e.setupAPI()
+	e.checkAndInstallPlugins()
 	
 	return e
 }
@@ -152,6 +157,7 @@ func (e *Editor) loadGoConfig() error {
 		LoadPlugin: e.loadPluginFromConfig,
 		SetOption: e.setOptionFromConfig,
 		RegisterHook: e.registerHookFromConfig,
+		InstallPlugin: e.installPluginFromConfig,
 	}
 	
 	return config.LoadGoConfig(e.config.GoConfigFile(), api)
@@ -171,6 +177,31 @@ func (e *Editor) setOptionFromConfig(key string, value any) {
 }
 
 func (e *Editor) registerHookFromConfig(event string, handler func()) {
+}
+
+func (e *Editor) setupAutoInstaller() {
+	pluginDir := e.config.PluginDir()
+	cacheDir := e.config.CacheDir
+	e.autoInstaller = plugin.NewAutoInstaller(pluginDir, cacheDir)
+}
+
+func (e *Editor) installPluginFromConfig(name, repository, version string) {
+	spec := plugin.PluginSpec{
+		Name:       name,
+		Repository: repository,
+		Version:    version,
+	}
+	e.configPluginSpecs = append(e.configPluginSpecs, spec)
+}
+
+func (e *Editor) checkAndInstallPlugins() {
+	if e.autoInstaller == nil || len(e.configPluginSpecs) == 0 {
+		return
+	}
+	
+	if err := e.autoInstaller.CheckAndInstallPlugins(e.configPluginSpecs); err != nil {
+		fmt.Printf("Warning: error during plugin installation: %v\n", err)
+	}
 }
 
 func (e *Editor) setupAPI() {

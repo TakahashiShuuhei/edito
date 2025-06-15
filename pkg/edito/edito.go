@@ -62,3 +62,11 @@ func ExecuteCommand(command string, args []string) error {
 	}
 	return nil
 }
+
+// InstallPlugin installs a plugin from a git repository
+// Usage: edito.InstallPlugin("file-tree", "github.com/TakahashiShuuhei/edito-file-tree", "v0.1.0")
+func InstallPlugin(name, repository, version string) {
+	if editor != nil {
+		editor.InstallPlugin(name, repository, version)
+	}
+}

@@ -1,6 +1,7 @@
 # Binaries
 /edito
 /edito-config
+/edito-test
 *.so
 
 # Go build cache
