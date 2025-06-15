@@ -1,0 +1,33 @@
+# Binaries
+edito
+edito-config
+*.so
+
+# Go build cache
+.cache/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.exe
+*.test
+*.prof
+
+# Temporary files
+/tmp/
+*.tmp
+
+# Config files (user specific)
+config.so
+
+# Test coverage
+*.out
