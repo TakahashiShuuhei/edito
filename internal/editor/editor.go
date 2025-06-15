@@ -34,6 +34,8 @@ type Editor struct {
 	configKeyBindings map[string]string
 	autoInstaller  *plugin.AutoInstaller
 	configPluginSpecs []plugin.PluginSpec
+	statusMessage  string
+	messageTimeout int
 }
 
 func New() *Editor {
@@ -144,6 +146,8 @@ func (e *Editor) deleteText(start, end int) {
 }
 
 func (e *Editor) showMessage(message string) {
+	e.statusMessage = message
+	e.messageTimeout = 100 // Show message for ~5 seconds (assuming 20fps)
 }
 
 func (e *Editor) loadGoConfig() error {
@@ -501,6 +505,14 @@ func (e *Editor) draw() {
 	e.drawStatusLine()
 	e.minibuffer.Draw(e.width, e.height-1)
 	
+	// Handle message timeout
+	if e.messageTimeout > 0 {
+		e.messageTimeout--
+	}
+	if e.messageTimeout <= 0 {
+		e.statusMessage = ""
+	}
+	
 	termbox.Flush()
 }
 
@@ -528,16 +540,22 @@ func (e *Editor) drawBuffer(buf *buffer.Buffer) {
 }
 
 func (e *Editor) drawStatusLine() {
-	buf := e.bufferManager.GetCurrentBuffer()
 	var statusLine string
-	if buf != nil {
-		modified := ""
-		if buf.Modified {
-			modified = "*"
-		}
-		statusLine = fmt.Sprintf("%s%s - Line %d, Col %d", buf.Name, modified, buf.CursorY+1, buf.CursorX+1)
+	
+	// Show message if available, otherwise show buffer info
+	if e.statusMessage != "" {
+		statusLine = e.statusMessage
 	} else {
-		statusLine = "No buffer"
+		buf := e.bufferManager.GetCurrentBuffer()
+		if buf != nil {
+			modified := ""
+			if buf.Modified {
+				modified = "*"
+			}
+			statusLine = fmt.Sprintf("%s%s - Line %d, Col %d", buf.Name, modified, buf.CursorY+1, buf.CursorX+1)
+		} else {
+			statusLine = "No buffer"
+		}
 	}
 	
 	for i, ch := range statusLine {

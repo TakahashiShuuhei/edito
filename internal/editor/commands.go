@@ -57,6 +57,14 @@ func (e *Editor) setupCommands() {
 		e.quit = true
 		return nil
 	})
+	
+	e.commandRegistry.Register("help", "Show help and available commands", func(args []string) error {
+		return e.showHelp()
+	})
+	
+	e.commandRegistry.Register("list-commands", "List all available commands", func(args []string) error {
+		return e.showCommandList()
+	})
 }
 
 func (e *Editor) activateCommandMode() {
@@ -80,13 +88,28 @@ func (e *Editor) activateCommandMode() {
 		commandName := parts[0]
 		args := parts[1:]
 		
-		// Check if it's an interactive command
+		// Check if command exists
 		cmd := e.commandRegistry.GetCommand(commandName)
-		if cmd != nil && cmd.Interactive != nil {
-			return e.commandRegistry.ExecuteInteractive(commandName, e.promptUser)
+		if cmd == nil {
+			e.showMessage(fmt.Sprintf("Command not found: %s. Type 'help' or 'list-commands' to see available commands.", commandName))
+			return nil
 		}
 		
-		return e.commandRegistry.Execute(commandName, args)
+		// Execute interactive command
+		if cmd.Interactive != nil {
+			err := e.commandRegistry.ExecuteInteractive(commandName, e.promptUser)
+			if err != nil {
+				e.showMessage(fmt.Sprintf("Command failed: %v", err))
+			}
+			return nil
+		}
+		
+		// Execute regular command
+		err := e.commandRegistry.Execute(commandName, args)
+		if err != nil {
+			e.showMessage(fmt.Sprintf("Command failed: %v", err))
+		}
+		return nil
 	})
 }
 
@@ -170,5 +193,64 @@ func (e *Editor) gotoLine(lineNum int) error {
 	buf.CursorX = 0
 	e.adjustOffset()
 	
+	return nil
+}
+
+func (e *Editor) showHelp() error {
+	// Create a temporary buffer for help content
+	helpContent := []string{
+		"Edito - Emacs-like CLI Editor",
+		"",
+		"Key Bindings:",
+		"  Ctrl+Q     - Quit editor",
+		"  Ctrl+S     - Save current buffer", 
+		"  Ctrl+A     - Move to line beginning",
+		"  Ctrl+E     - Move to line end",
+		"  Ctrl+P     - Previous line (or Up arrow)",
+		"  Ctrl+N     - Next line (or Down arrow)",
+		"  Ctrl+F     - Forward character (or Right arrow)",
+		"  Ctrl+B     - Backward character (or Left arrow)",
+		"",
+		"  M-x        - Command palette (or F1, Ctrl+Space)",
+		"",
+		"Commands (via M-x):",
+		"  help           - Show this help",
+		"  list-commands  - List all available commands",
+		"  goto-line      - Go to specific line number",
+		"  save-buffer    - Save current buffer",
+		"  find-file      - Open a file",
+		"  list-buffers   - List all open buffers",
+		"  quit           - Quit editor",
+		"",
+		"Type any command name in M-x to execute it.",
+		"Press any key to close this help.",
+	}
+	
+	return e.showHelpBuffer("*Help*", helpContent)
+}
+
+func (e *Editor) showCommandList() error {
+	commands := e.commandRegistry.ListCommands()
+	var helpContent []string
+	
+	helpContent = append(helpContent, "Available Commands:")
+	helpContent = append(helpContent, "")
+	for _, cmd := range commands {
+		helpContent = append(helpContent, fmt.Sprintf("  %-15s - %s", cmd.Name, cmd.Description))
+	}
+	helpContent = append(helpContent, "")
+	helpContent = append(helpContent, "Press any key to close this list.")
+	
+	return e.showHelpBuffer("*Commands*", helpContent)
+}
+
+func (e *Editor) showHelpBuffer(name string, content []string) error {
+	// For now, show as a simple message
+	// In future, this could create a temporary read-only buffer
+	message := strings.Join(content, " | ")
+	if len(message) > 100 {
+		message = message[:100] + "... (Type 'help' or 'list-commands' for full info)"
+	}
+	e.showMessage(message)
 	return nil
 }
