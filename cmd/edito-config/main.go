@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-const Version = "0.2.2"
+const Version = "0.2.3"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -79,6 +79,9 @@ var ConfigInit = func() {
 	}
 	
 	// Build as plugin
+	fmt.Printf("Building plugin: go build -buildmode=plugin -o %s .\n", outputFile)
+	fmt.Printf("Working directory: %s\n", tempDir)
+	
 	cmd := exec.Command("go", "build", "-buildmode=plugin", "-o", outputFile, ".")
 	cmd.Dir = tempDir
 	cmd.Env = append(os.Environ(), "CGO_ENABLED=1")
@@ -87,6 +90,15 @@ var ConfigInit = func() {
 	if err != nil {
 		fmt.Printf("Build failed: %v\n%s\n", err, string(output))
 		os.Exit(1)
+	}
+	
+	fmt.Printf("Build output: %s\n", string(output))
+	
+	// Check if the output file was actually created
+	if _, err := os.Stat(outputFile); err != nil {
+		fmt.Printf("Warning: Output file %s was not created: %v\n", outputFile, err)
+	} else {
+		fmt.Printf("Output file %s created successfully\n", outputFile)
 	}
 	
 	fmt.Printf("Configuration compiled to: %s\n", outputFile)
