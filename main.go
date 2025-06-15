@@ -10,7 +10,14 @@ import (
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: edito <filename>")
+		fmt.Printf("Version: %s\n", GetVersion())
 		os.Exit(1)
+	}
+	
+	// Handle version flag
+	if len(os.Args) == 2 && (os.Args[1] == "--version" || os.Args[1] == "-v") {
+		fmt.Printf("edito version %s\n", GetVersion())
+		os.Exit(0)
 	}
 
 	filename := os.Args[1]

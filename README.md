@@ -42,6 +42,10 @@ edito <filename>
 
 # ローカルビルドの場合
 ./edito <filename>
+
+# バージョン確認
+edito --version
+edito-config --version
 ```
 
 ## キーバインディング

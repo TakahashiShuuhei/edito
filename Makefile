@@ -4,11 +4,11 @@
 
 # Build the main edito binary
 build:
-	go build -o edito ./main.go
+	go build -ldflags="-X main.GitCommit=$$(git rev-parse HEAD) -X main.BuildDate=$$(date -u +%Y-%m-%dT%H:%M:%SZ)" -o edito .
 
 # Build the configuration compiler tool
 config-tool:
-	go build -o edito-config ./cmd/edito-config/
+	go build -ldflags="-X main.Version=0.1.0" -o edito-config ./cmd/edito-config/
 
 # Build example configuration
 example-config: config-tool
@@ -60,10 +60,14 @@ dev-install: all dev-setup install-example-config install-example-plugin
 	@echo "Plugins: ~/.local/share/edito/plugins/"
 	@echo "Run 'edito filename.txt' to start editing"
 
+# Show version
+version:
+	@echo "edito version 0.1.0"
+
 # Help
 help:
 	@echo "Available targets:"
-	@echo "  build            - Build main edito binary"
+	@echo "  build            - Build main edito binary with version info"
 	@echo "  config-tool      - Build configuration compiler"
 	@echo "  example-config   - Build example configuration"
 	@echo "  example-plugin   - Build example plugin"
@@ -73,4 +77,5 @@ help:
 	@echo "  install          - Install system-wide"
 	@echo "  dev-setup        - Create user directories"
 	@echo "  dev-install      - Complete development setup"
+	@echo "  version          - Show version"
 	@echo "  help             - Show this help"
