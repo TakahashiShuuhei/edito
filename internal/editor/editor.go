@@ -255,7 +255,14 @@ func (e *Editor) setupKeyBindings() {
 	e.keyMap.BindKey(termbox.KeyBackspace2, func() { e.deleteChar() })
 	e.keyMap.BindKey(termbox.KeyCtrlX, func() { e.handleCtrlX() })
 	
+	// M-x (Alt+x) for command mode
 	e.keyMap.Bind(0, 'x', termbox.ModAlt, func() { e.activateCommandMode() })
+	
+	// Additional bindings for command mode (useful in WSL/terminal environments where M-x might not work)
+	// F1 as alternative to M-x
+	e.keyMap.BindKey(termbox.KeyF1, func() { e.activateCommandMode() })
+	// Ctrl+Space as alternative to M-x
+	e.keyMap.BindKey(termbox.KeyCtrlSpace, func() { e.activateCommandMode() })
 	
 	for key, cmd := range e.configKeyBindings {
 		e.bindConfigKey(key, cmd)

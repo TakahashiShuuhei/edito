@@ -70,7 +70,7 @@ func (e *Editor) activateCommandMode() {
 	}
 	
 	e.minibuffer.SetCompletions(completions)
-	e.minibuffer.Activate(minibuffer.ModeCommand, "M-x ", func(input string) error {
+	e.minibuffer.Activate(minibuffer.ModeCommand, "M-x (or F1/C-Space) ", func(input string) error {
 		parts := strings.Fields(input)
 		if len(parts) == 0 {
 			return nil
