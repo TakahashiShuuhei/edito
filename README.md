@@ -18,11 +18,13 @@ Emacsライクなキーバインディング、バッファシステム、プラ
 ### 方法1: go install（推奨）
 
 ```bash
-# メインのエディタをインストール
+# 最新版をインストール
 go install github.com/TakahashiShuuhei/edito@latest
-
-# 設定ファイルコンパイラもインストール
 go install github.com/TakahashiShuuhei/edito/cmd/edito-config@latest
+
+# 特定バージョンをインストール
+go install github.com/TakahashiShuuhei/edito@v0.1.0
+go install github.com/TakahashiShuuhei/edito/cmd/edito-config@v0.1.0
 ```
 
 ### 方法2: ソースからビルド
@@ -209,6 +211,16 @@ edito/
 - データファイル: `$XDG_DATA_HOME/edito/` (デフォルト: `~/.local/share/edito/`)
 - キャッシュファイル: `$XDG_CACHE_HOME/edito/` (デフォルト: `~/.cache/edito/`)
 - プラグイン: `$XDG_DATA_HOME/edito/plugins/`
+
+## リリース
+
+現在のバージョン: **v0.1.0**
+
+リリース情報は [GitHub Releases](https://github.com/TakahashiShuuhei/edito/releases) で確認できます。
+
+## 開発に参加
+
+Issues や Pull Request を歓迎します！
 
 ## ライセンス
 
