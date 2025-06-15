@@ -145,13 +145,7 @@ func (e *Editor) showMessage(message string) {
 }
 
 func (e *Editor) loadGoConfig() error {
-	// First try to load compiled config
-	err := config.LoadCompiledConfig(e.config.CompiledConfigFile())
-	if err != nil {
-		return fmt.Errorf("failed to load compiled config: %v", err)
-	}
-	
-	// If no compiled config exists, try to load and parse Go source
+	// Try to load and parse Go source first
 	api := config.EditorAPI{
 		BindKey: e.bindKeyFromConfig,
 		LoadPlugin: e.loadPluginFromConfig,
@@ -160,7 +154,16 @@ func (e *Editor) loadGoConfig() error {
 		InstallPlugin: e.installPluginFromConfig,
 	}
 	
-	return config.LoadGoConfig(e.config.GoConfigFile(), api)
+	err := config.LoadGoConfig(e.config.GoConfigFile(), api)
+	if err != nil {
+		// If Go config fails, try compiled config as fallback
+		compiledErr := config.LoadCompiledConfig(e.config.CompiledConfigFile())
+		if compiledErr != nil {
+			return fmt.Errorf("failed to load Go config: %v, and compiled config: %v", err, compiledErr)
+		}
+	}
+	
+	return nil
 }
 
 func (e *Editor) bindKeyFromConfig(key, command string) {
